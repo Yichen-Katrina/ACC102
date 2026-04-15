@@ -123,7 +123,7 @@ fig_line = px.line(
     color_discrete_sequence=px.colors.qualitative.Set2
 )
 fig_line.update_layout(hovermode='x unified', height=420)
-st.plotly_chart(fig_line, use_container_width=True)
+st.plotly_chart(fig_line, width='stretch')
 
 # Bar Chart
 st.subheader(f"Country Comparison — {latest_year}")
@@ -138,14 +138,14 @@ for col, ind in zip([col1, col2, col3], indicators):
         color_discrete_sequence=px.colors.qualitative.Set2
     )
     fig_bar.update_layout(showlegend=False, height=300)
-    col.plotly_chart(fig_bar, use_container_width=True)
+    col.plotly_chart(fig_bar, width='stretch')
 
 # Summary Table 
 st.markdown("---")
 st.subheader("Summary Statistics (Selected Period)")
 summary = filtered.groupby('economy')[indicators].mean().round(2).reset_index()
 summary.columns = ['Country', 'Avg GDP Growth (%)', 'Avg Inflation (%)', 'Avg Unemployment (%)']
-st.dataframe(summary, use_container_width=True, hide_index=True)
+st.dataframe(summary, width='stretch', hide_index=True)
 
 # Key Insights 
 st.markdown("---")
