@@ -156,3 +156,38 @@ if not avg.empty:
         top    = avg[ind].idxmax()
         bottom = avg[ind].idxmin()
         st.markdown(f"**{ind}:** Highest average → `{top}` ({avg.loc[top, ind]}%) | Lowest → `{bottom}` ({avg.loc[bottom, ind]}%)")
+# Advanced Insights
+st.markdown("---")
+st.subheader("Advanced Insights")
+
+tab1, tab2 = st.tabs(["Okun's Law", "COVID-19 Impact"])
+
+with tab1:
+    st.markdown("**GDP Growth vs Unemployment — Does Okun's Law Hold?**")
+    fig_scatter = px.scatter(
+        filtered, x='GDP Growth (%)', y='Unemployment (%)',
+        color='economy', trendline='ols',
+        title="GDP Growth vs Unemployment",
+        labels={'economy': 'Country'},
+        color_discrete_sequence=px.colors.qualitative.Set2
+    )
+    st.plotly_chart(fig_scatter, width='stretch')
+    st.caption("A negative correlation suggests higher growth is associated with lower unemployment — consistent with Okun's Law.")
+
+with tab2:
+    st.markdown("**COVID-19 Shock — Change from 2019 to 2020**")
+    pre  = data_clean[data_clean['year'] == 2019].set_index('economy')
+    post = data_clean[data_clean['year'] == 2020].set_index('economy')
+    shock = pd.DataFrame({
+        'GDP Drop (pp)': (post['GDP Growth (%)'] - pre['GDP Growth (%)']).round(2),
+        'Unemployment Rise (pp)': (post['Unemployment (%)'] - pre['Unemployment (%)']).round(2)
+    }).reset_index()
+    fig_shock = px.bar(
+        shock, x='economy', y='GDP Drop (pp)',
+        title='GDP Growth Change due to COVID-19 (2019 → 2020)',
+        labels={'economy': 'Country'},
+        color='GDP Drop (pp)',
+        color_continuous_scale='RdYlGn'
+    )
+    st.plotly_chart(fig_shock, width='stretch')
+    st.caption("The UK experienced the sharpest contraction, while China was the only economy to maintain positive growth in 2020.")
