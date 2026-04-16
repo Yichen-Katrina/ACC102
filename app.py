@@ -176,8 +176,8 @@ with tab1:
 
 with tab2:
     st.markdown("**COVID-19 Shock — Change from 2019 to 2020**")
-    pre  = data_clean[data_clean['year'] == 2019].set_index('economy')
-    post = data_clean[data_clean['year'] == 2020].set_index('economy')
+    pre  = data[data['year'] == 2019].set_index('economy')
+    post = data[data['year'] == 2020].set_index('economy')
     shock = pd.DataFrame({
         'GDP Drop (pp)': (post['GDP Growth (%)'] - pre['GDP Growth (%)']).round(2),
         'Unemployment Rise (pp)': (post['Unemployment (%)'] - pre['Unemployment (%)']).round(2)
