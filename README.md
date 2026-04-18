@@ -37,6 +37,11 @@ How have key macroeconomic indicators evolved across major economies over the pa
 - Japan consistently maintained the lowest inflation rate (0.41%) globally
 - All 7 economies experienced sharp GDP contractions in 2020 due to COVID-19
 - Post-pandemic inflation surged across all countries in 2021–2022
+- A correlation analysis confirmed Okun's Law holds across most economies, 
+with a negative relationship between GDP growth and unemployment. 
+The COVID-19 shock analysis revealed asymmetric impacts — the UK experienced 
+the sharpest contraction while China maintained positive growth, 
+reflecting differences in economic structure and pandemic response.
 
 ## 5. How to Run
 
