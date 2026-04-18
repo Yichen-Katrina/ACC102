@@ -107,7 +107,17 @@ for i, country in enumerate(selected_countries):
         inf = row['Inflation (%)'].values[0]
         une = row['Unemployment (%)'].values[0]
         with cols[i]:
-            st.metric(label=f"🏳️ {country}", value=f"{gdp:.1f}%", delta="GDP Growth")
+            flag_map = {
+    'Brazil': '🇧🇷',
+    'China': '🇨🇳',
+    'Germany': '🇩🇪',
+    'India': '🇮🇳',
+    'Japan': '🇯🇵',
+    'United Kingdom': '🇬🇧',
+    'United States': '🇺🇸'
+}
+flag = flag_map.get(country, '')
+st.metric(label=f"{flag} {country}", value=f"{gdp:.1f}%", delta="GDP Growth")
             st.caption(f"Inflation: {inf:.1f}% | Unemployment: {une:.1f}%")
 
 st.markdown("---")
