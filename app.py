@@ -116,9 +116,9 @@ for i, country in enumerate(selected_countries):
     'United Kingdom': '🇬🇧',
     'United States': '🇺🇸'
 }
-flag = flag_map.get(country, '')
-st.metric(label=f"{flag} {country}", value=f"{gdp:.1f}%", delta="GDP Growth")
-            st.caption(f"Inflation: {inf:.1f}% | Unemployment: {une:.1f}%")
+            flag = flag_map.get(country, "")
+            st.metric(label=f"{flag} {country}", value=f"{gdp:.1f}%", delta="GDP Growth")
+            st.caption(f"Inflation: {inf:.1f}% | Unemp: {une:.1f}%")
 
 st.markdown("---")
 
