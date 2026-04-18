@@ -46,7 +46,13 @@ reflecting differences in economic structure and pandemic response.
 ## 5. How to Run
 
 ```bash
-pip install streamlit pandas plotly
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Or install manually:
+```bash
+pip install streamlit pandas plotly statsmodels
 streamlit run app.py
 ```
 
@@ -56,6 +62,9 @@ streamlit run app.py
 
 ## 7. Limitations & Next Steps
 
-- 2024–2025 data may be incomplete or estimated for some countries
-- Unemployment data for India is limited in coverage
-- Future improvements could include GDP per capita, trade balance, and more countries
+- **Data completeness:** 2024–2025 data may be incomplete or based on preliminary estimates for some countries, as World Bank figures are typically published with a 1–2 year lag.
+- **Missing value imputation:** Missing values were filled using each country's historical mean, which is a simplified approach that may smooth over structural breaks or crisis periods.
+- **Unemployment coverage:** Unemployment data for India has limited historical coverage in earlier years, which may affect cross-country comparisons.
+- **Correlation vs causation:** The Okun's Law scatter analysis shows correlation between GDP growth and unemployment, but does not establish causation or control for other macroeconomic variables.
+- **Country selection bias:** The seven economies were selected for diversity and data availability, but do not represent all global economic patterns, particularly smaller or developing economies.
+- **Future improvements:** Could include additional indicators such as GDP per capita, trade balance, and government debt; a wider country selection; live data integration via the World Bank API; and more advanced modelling such as regression analysis or time-series forecasting.
