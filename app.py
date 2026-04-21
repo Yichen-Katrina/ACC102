@@ -207,7 +207,7 @@ st.subheader("🌐 Economic Evolution — Animated Bubble Chart")
 st.caption("Each bubble represents a country. Size = Unemployment rate. X = GDP Growth. Y = Inflation. Press Play to animate.")
 
 fig_bubble = px.scatter(
-    data_clean[data_clean['economy'].isin(selected_countries)],
+    data[data['economy'].isin(selected_countries)],
     x='GDP Growth (%)',
     y='Inflation (%)',
     size='Unemployment (%)',
@@ -224,7 +224,7 @@ fig_bubble = px.scatter(
 )
 fig_bubble.update_layout(height=500)
 st.plotly_chart(fig_bubble, width='stretch')
-# Growth Rate Calculator 
+# Growth Rate Calculator
 st.markdown("---")
 st.subheader("🧮 Growth Rate Calculator")
 st.caption("Select a country, indicator, and time period to calculate the cumulative change.")
@@ -237,9 +237,9 @@ with col_b:
 with col_c:
     calc_years = st.slider("Year Range", min_value=2000, max_value=2025, value=(2000, 2025))
 
-calc_data = data_clean[
-    (data_clean['economy'] == calc_country) &
-    (data_clean['year'].between(calc_years[0], calc_years[1]))
+calc_data = data[
+    (data['economy'] == calc_country) &
+    (data['year'].between(calc_years[0], calc_years[1]))
 ]
 
 if not calc_data.empty:
