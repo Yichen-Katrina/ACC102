@@ -201,6 +201,7 @@ with tab2:
     )
     st.plotly_chart(fig_shock, width='stretch')
     st.caption("The UK experienced the sharpest contraction, while China was the only economy to maintain positive growth in 2020.")
+    
 # Animated Bubble Chart 
 st.markdown("---")
 st.subheader("🌐 Economic Evolution — Animated Bubble Chart")
@@ -224,6 +225,7 @@ fig_bubble = px.scatter(
 )
 fig_bubble.update_layout(height=500)
 st.plotly_chart(fig_bubble, width='stretch')
+
 # Growth Rate Calculator
 st.markdown("---")
 st.subheader("🧮 Growth Rate Calculator")
@@ -231,7 +233,7 @@ st.caption("Select a country, indicator, and time period to calculate the cumula
 
 col_a, col_b, col_c = st.columns(3)
 with col_a:
-    calc_country = st.selectbox("Country", options=sorted(data_clean['economy'].unique()))
+    calc_country = st.selectbox("Country", options=sorted(data['economy'].unique()))
 with col_b:
     calc_indicator = st.selectbox("Indicator", options=indicators)
 with col_c:
