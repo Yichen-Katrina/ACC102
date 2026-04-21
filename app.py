@@ -201,3 +201,68 @@ with tab2:
     )
     st.plotly_chart(fig_shock, width='stretch')
     st.caption("The UK experienced the sharpest contraction, while China was the only economy to maintain positive growth in 2020.")
+# Animated Bubble Chart 
+st.markdown("---")
+st.subheader("🌐 Economic Evolution — Animated Bubble Chart")
+st.caption("Each bubble represents a country. Size = Unemployment rate. X = GDP Growth. Y = Inflation. Press Play to animate.")
+
+fig_bubble = px.scatter(
+    data_clean[data_clean['economy'].isin(selected_countries)],
+    x='GDP Growth (%)',
+    y='Inflation (%)',
+    size='Unemployment (%)',
+    color='economy',
+    animation_frame='year',
+    animation_group='economy',
+    hover_name='economy',
+    size_max=50,
+    range_x=[-15, 20],
+    range_y=[-2, 20],
+    title='GDP Growth vs Inflation vs Unemployment (2000–2025)',
+    labels={'economy': 'Country'},
+    color_discrete_sequence=px.colors.qualitative.Set2
+)
+fig_bubble.update_layout(height=500)
+st.plotly_chart(fig_bubble, width='stretch')
+# Growth Rate Calculator 
+st.markdown("---")
+st.subheader("🧮 Growth Rate Calculator")
+st.caption("Select a country, indicator, and time period to calculate the cumulative change.")
+
+col_a, col_b, col_c = st.columns(3)
+with col_a:
+    calc_country = st.selectbox("Country", options=sorted(data_clean['economy'].unique()))
+with col_b:
+    calc_indicator = st.selectbox("Indicator", options=indicators)
+with col_c:
+    calc_years = st.slider("Year Range", min_value=2000, max_value=2025, value=(2000, 2025))
+
+calc_data = data_clean[
+    (data_clean['economy'] == calc_country) &
+    (data_clean['year'].between(calc_years[0], calc_years[1]))
+]
+
+if not calc_data.empty:
+    start_val = calc_data[calc_data['year'] == calc_years[0]][calc_indicator].values
+    end_val   = calc_data[calc_data['year'] == calc_years[1]][calc_indicator].values
+
+    if len(start_val) > 0 and len(end_val) > 0:
+        start_val = round(start_val[0], 2)
+        end_val   = round(end_val[0], 2)
+        change    = round(end_val - start_val, 2)
+        avg_val   = round(calc_data[calc_indicator].mean(), 2)
+
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric(f"Value in {calc_years[0]}", f"{start_val}%")
+        m2.metric(f"Value in {calc_years[1]}", f"{end_val}%")
+        m3.metric("Change (pp)", f"{change:+.2f}")
+        m4.metric("Period Average", f"{avg_val}%")
+
+        fig_calc = px.line(
+            calc_data, x='year', y=calc_indicator,
+            title=f"{calc_indicator} — {calc_country} ({calc_years[0]}–{calc_years[1]})",
+            markers=True,
+            color_discrete_sequence=['#1D9E75']
+        )
+        fig_calc.update_layout(height=350)
+        st.plotly_chart(fig_calc, width='stretch')
