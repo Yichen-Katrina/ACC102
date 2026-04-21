@@ -1,15 +1,18 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from scipy import stats
+from sklearn.linear_model import LinearRegression
+import numpy as np
 
-# Page Config 
+# Page Config
 st.set_page_config(
     page_title="Global Macro Dashboard",
     page_icon="🌍",
     layout="wide"
 )
 
-# Load Data 
+# Load Data
 @st.cache_data
 def load_data():
     df_raw = pd.read_csv('Data.csv')
@@ -51,7 +54,7 @@ def load_data():
 data = load_data()
 indicators = ['GDP Growth (%)', 'Inflation (%)', 'Unemployment (%)']
 
-# Sidebar 
+# Sidebar
 st.sidebar.title("🎛️ Dashboard Controls")
 all_countries = sorted(data['economy'].unique())
 selected_countries = st.sidebar.multiselect(
@@ -73,15 +76,46 @@ st.sidebar.markdown(
     "Accessed: April 2026"
 )
 
-# Filter Data 
+# Filter Data
 filtered = data[
     (data['economy'].isin(selected_countries)) &
     (data['year'].between(selected_years[0], selected_years[1]))
 ]
 
-# Header 
+# ── IMPROVEMENT 1: About / Problem Statement ──────────────────────────────────
 st.title("🌍 Global Macro Dashboard")
 st.markdown("Explore **GDP Growth**, **Inflation**, and **Unemployment** trends across 7 major economies (2000–2025).")
+
+with st.expander("ℹ️ About this dashboard — click to expand", expanded=False):
+    st.markdown("""
+**Analytical Problem**
+
+How have GDP growth, inflation, and unemployment evolved across major economies since 2000,
+and what can these macro indicators tell us about economic resilience — especially around the
+2008 Global Financial Crisis and the 2020 COVID-19 pandemic?
+
+**Target Audience**
+
+Economics and finance students, policy researchers, and business analysts who need a quick
+comparative view of macroeconomic performance across the G7 and emerging markets.
+
+**Dataset**
+
+World Bank World Development Indicators (WDI) — three series:
+- `NY.GDP.MKTP.KD.ZG` — GDP growth (annual %)
+- `FP.CPI.TOTL.ZG` — Inflation, consumer prices (annual %)
+- `SL.UEM.TOTL.ZS` — Unemployment, total (% of total labour force)
+
+Coverage: Brazil, China, Germany, India, Japan, United Kingdom, United States (2000–2025).
+Missing values are filled with each country's own period average to preserve trend continuity.
+
+**How to use**
+
+Use the sidebar to filter countries and year range, then explore each tab:
+📊 Overview → snapshot & rankings | 📈 Trend → time-series by indicator |
+🔬 Advanced → Okun's Law & COVID shock | 🌐 Bubble → animated three-way view |
+🧮 Calculator → compute change between any two years
+    """)
 
 st.info("👈 Use the sidebar to filter countries and year range. Then explore the tabs below to dive into the data.")
 
@@ -92,7 +126,7 @@ c3.warning("🧮 **Calculator** — Compute changes over a custom period")
 
 st.markdown("---")
 
-# Tabs 
+# Tabs
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📊 Overview",
     "📈 Trend Analysis",
@@ -101,7 +135,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "🧮 Calculator"
 ])
 
-# Tab 1: Overview 
+# Tab 1: Overview
 with tab1:
     latest_year = filtered['year'].max()
     latest = filtered[filtered['year'] == latest_year]
@@ -143,7 +177,20 @@ with tab1:
     summary.columns = ['Country', 'Avg GDP Growth (%)', 'Avg Inflation (%)', 'Avg Unemployment (%)']
     st.dataframe(summary, use_container_width=True, hide_index=True)
 
-# Tab 2: Trend Analysis 
+    # ── IMPROVEMENT 2: CSV Download ───────────────────────────────────────────
+    st.markdown("---")
+    st.subheader("📥 Export Data")
+    st.caption("Download the filtered dataset as a CSV file for further analysis.")
+    csv_export = filtered[['economy', 'year'] + indicators].sort_values(['economy', 'year'])
+    csv_bytes = csv_export.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="⬇️ Download filtered data as CSV",
+        data=csv_bytes,
+        file_name=f"global_macro_{selected_years[0]}_{selected_years[1]}.csv",
+        mime="text/csv"
+    )
+
+# Tab 2: Trend Analysis
 with tab2:
     st.subheader(f"{selected_indicator} Trend — {selected_years[0]} to {selected_years[1]}")
     fig_line = px.line(
@@ -164,21 +211,66 @@ with tab2:
             bottom = avg[ind].idxmin()
             st.markdown(f"**{ind}:** Highest → `{top}` ({avg.loc[top, ind]}%) | Lowest → `{bottom}` ({avg.loc[bottom, ind]}%)")
 
-# Tab 3: Advanced Insights 
+# Tab 3: Advanced Insights
 with tab3:
     adv_tab1, adv_tab2 = st.tabs(["Okun's Law", "COVID-19 Impact"])
 
+    # ── IMPROVEMENT 3: Pearson r + Linear Regression in Okun's Law tab ────────
     with adv_tab1:
         st.markdown("**GDP Growth vs Unemployment — Does Okun's Law Hold?**")
+
+        okun_data = filtered[['GDP Growth (%)', 'Unemployment (%)']].dropna()
+
         fig_scatter = px.scatter(
             filtered, x='GDP Growth (%)', y='Unemployment (%)',
             color='economy', trendline='ols',
-            title="GDP Growth vs Unemployment",
+            title="GDP Growth vs Unemployment (OLS trendline per country)",
             labels={'economy': 'Country'},
             color_discrete_sequence=px.colors.qualitative.Set2
         )
         st.plotly_chart(fig_scatter, width='stretch')
-        st.caption("A negative correlation suggests higher growth is associated with lower unemployment — consistent with Okun's Law.")
+
+        # Pearson correlation
+        if len(okun_data) >= 3:
+            r, p_value = stats.pearsonr(okun_data['GDP Growth (%)'], okun_data['Unemployment (%)'])
+
+            # Linear regression (sklearn)
+            X = okun_data[['GDP Growth (%)']].values
+            y = okun_data['Unemployment (%)'].values
+            model = LinearRegression().fit(X, y)
+            slope     = round(model.coef_[0], 3)
+            intercept = round(model.intercept_, 3)
+            r_squared = round(model.score(X, y), 3)
+
+            # Display stats in metric cards
+            mc1, mc2, mc3, mc4 = st.columns(4)
+            mc1.metric("Pearson r", f"{r:.3f}", help="Strength and direction of linear correlation. Negative = Okun's Law holds.")
+            mc2.metric("p-value", f"{p_value:.4f}", help="Statistical significance. p < 0.05 means the correlation is significant.")
+            mc3.metric("OLS Slope (β)", f"{slope}", help="For each 1 pp rise in GDP growth, unemployment changes by this amount (pp).")
+            mc4.metric("R²", f"{r_squared}", help="Proportion of unemployment variation explained by GDP growth.")
+
+            # Written interpretation
+            direction = "negative" if r < 0 else "positive"
+            significance = "statistically significant (p < 0.05)" if p_value < 0.05 else "not statistically significant at the 5% level"
+
+            st.info(f"""
+**Statistical Interpretation**
+
+The Pearson correlation coefficient is **r = {r:.3f}**, indicating a **{direction} relationship**
+between GDP growth and unemployment across the selected countries and period.
+This result is **{significance}**.
+
+The OLS regression yields a slope of **β = {slope}**, meaning that on average, a 1 percentage
+point increase in GDP growth is associated with a **{abs(slope)} pp {'decrease' if slope < 0 else 'increase'}**
+in the unemployment rate — broadly consistent with {'Okun\'s Law' if slope < 0 else 'a non-standard pattern'}.
+
+The R² of **{r_squared}** suggests that GDP growth alone explains approximately
+**{int(r_squared * 100)}%** of the variation in unemployment in this dataset,
+with the remainder driven by structural factors such as labour market rigidities,
+demographic trends, and policy responses.
+            """)
+        else:
+            st.warning("Not enough data points to compute statistics. Please select more countries or a wider year range.")
 
     with adv_tab2:
         st.markdown("**COVID-19 Shock — Change from 2019 to 2020**")
@@ -198,7 +290,21 @@ with tab3:
         st.plotly_chart(fig_shock, width='stretch')
         st.caption("The UK experienced the sharpest contraction, while China was the only economy to maintain positive growth in 2020.")
 
-# Tab 4: Bubble Chart 
+        # Additional interpretation
+        if not shock.empty:
+            worst = shock.loc[shock['GDP Drop (pp)'].idxmin(), 'economy']
+            best  = shock.loc[shock['GDP Drop (pp)'].idxmax(), 'economy']
+            avg_drop = shock['GDP Drop (pp)'].mean()
+            st.info(f"""
+**Key Findings**
+
+- The hardest-hit economy was **{worst}**, experiencing the largest GDP growth decline from 2019 to 2020.
+- **{best}** showed the smallest contraction (or continued growth), reflecting stronger economic resilience or earlier containment.
+- Across all 7 economies, the average GDP growth change was **{avg_drop:.2f} pp**, illustrating the synchronised nature of the COVID-19 shock.
+- The variation in outcomes reflects differences in fiscal stimulus, industrial structure, and containment policy effectiveness.
+            """)
+
+# Tab 4: Bubble Chart
 with tab4:
     st.subheader("🌐 Economic Evolution — Animated Bubble Chart")
     st.caption("Each bubble represents a country. Size = Unemployment rate. X = GDP Growth. Y = Inflation. Press ▶ to animate.")
@@ -216,7 +322,7 @@ with tab4:
     fig_bubble.update_layout(height=550)
     st.plotly_chart(fig_bubble, width='stretch')
 
-# Tab 5: Calculator 
+# Tab 5: Calculator
 with tab5:
     st.subheader("🧮 Growth Rate Calculator")
     st.caption("Select a country, indicator, and time period to calculate the cumulative change.")
